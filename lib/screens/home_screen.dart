@@ -1,5 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:emagazine/screens/detail_screen.dart';
+import 'package:emagazine/screens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -48,18 +50,31 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(color: Colors.white, fontSize: 35),
                         ),
                       ),
-                      Column(
-                        children: [
-                          Icon(
-                            Icons.remove_from_queue_rounded,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                          Text(
-                            'Logout',
-                            style: TextStyle(fontSize: 12, color: Colors.white),
-                          )
-                        ],
+                      GestureDetector(
+                        onTap: () async {
+                          Future<void> authResult =
+                              FirebaseAuth.instance.signOut();
+                          Navigator.push(
+                            (context),
+                            MaterialPageRoute(
+                              builder: (context) => LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.remove_from_queue_rounded,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'Logout',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.white),
+                            )
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -186,7 +201,7 @@ class Item1 extends StatelessWidget {
       onTap: () => Navigator.push(
         (context),
         MaterialPageRoute(
-          builder: (ontext) => DetailScreen(index: 1),
+          builder: (context) => DetailScreen(index: 1),
         ),
       ),
       child: Container(
@@ -204,30 +219,12 @@ class Item2 extends StatelessWidget {
       onTap: () => Navigator.push(
         (context),
         MaterialPageRoute(
-          builder: (ontext) => DetailScreen(index: 2),
+          builder: (context) => DetailScreen(index: 2),
         ),
       ),
       child: Container(
         height: 70,
         child: Image.asset('images/pic2.jpg'),
-      ),
-    );
-  }
-}
-
-class Item3 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        (context),
-        MaterialPageRoute(
-          builder: (ontext) => DetailScreen(index: 2),
-        ),
-      ),
-      child: Container(
-        height: 70,
-        child: Image.asset('images/pics.jpg'),
       ),
     );
   }

@@ -30,10 +30,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   provider: ^5.0.0
   carousel_slider: ^4.0.0
-  modal_bottom_sheet: ^2.0.0
   cloud_firestore: ^2.1.0
   firebase_auth: ^1.1.4
   firebase_core: ^1.1.1
+  modal_progress_hud_nsn: ^0.1.0-nullsafety-1
+
 
 dev_dependencies:
   flutter_test:

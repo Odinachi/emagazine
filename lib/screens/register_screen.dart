@@ -27,13 +27,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool _emailValidate = true;
+    bool _passwordValidate = true;
+    bool _phoneValidate = true;
+    bool _nameValidate = true;
+
     AuthNotifier authNotifier =
         Provider.of<AuthNotifier>(context, listen: false);
-    String _emailController = '';
-    String _passwordController = '';
-    String _firstNameController = '';
-    String _lastNameController = '';
-    String _phoneNumberController = '';
+    TextEditingController _emailController = TextEditingController();
+    TextEditingController _passwordController = TextEditingController();
+    TextEditingController _firstNameController = TextEditingController();
+    TextEditingController _lastNameController = TextEditingController();
+    TextEditingController _phoneNumberController = TextEditingController();
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -61,44 +66,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 CustomInputField(
-                    onChangeCallback: (value) {
-                      _firstNameController = value;
-                    },
-                    name: 'First Name'),
+                  control: _firstNameController,
+                  name: 'First Name',
+                  error: _nameValidate ? null : 'Input a valid name',
+                ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomInputField(
-                    onChangeCallback: (value) {
-                      _lastNameController = value;
-                    },
-                    name: 'Last Name'),
+                  control: _lastNameController,
+                  name: 'Last Name',
+                  error: _nameValidate ? null : 'Input a valid name',
+                ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomInputField(
-                  onChangeCallback: (value) {
-                    _emailController = value;
-                  },
+                  control: _emailController,
                   name: 'Email',
+                  error: _emailValidate ? null : 'input a valid email',
                 ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomInputField(
-                  onChangeCallback: (value) {
-                    _phoneNumberController = value;
-                  },
+                  control: _phoneNumberController,
                   name: 'Phone Number',
+                  error: _phoneValidate ? null : 'Input a valid number',
                 ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomPassWordField(
-                  onChangeCallback: (value) {
-                    _passwordController = value;
-                  },
+                  control: _passwordController,
                   name: 'Password',
+                  error: _passwordValidate ? null : 'Input a valid password',
                 ),
                 SizedBox(
                   height: 50,
@@ -106,35 +108,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomButton(
                   text: 'Register',
                   callback: () async {
-                    UserCredential authResult = await FirebaseAuth.instance
-                        .createUserWithEmailAndPassword(
-                            email: _emailController,
-                            password: _passwordController)
-                        .catchError((e) => print(e));
-                    if (authResult != null) {
-                      User? firebaseUser = authResult.user;
-                      if (firebaseUser != null) {
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(firebaseUser.uid)
-                            .set({
-                          'phoneNumber': _phoneNumberController,
-                          'firstName': _firstNameController,
-                          'last_name': _lastNameController,
-                          'email': _emailController,
-                        });
-                        await firebaseUser.reload();
-                        print('sign up: $firebaseUser');
-                        User? newUser = await FirebaseAuth.instance.currentUser;
-                        authNotifier.setUser(newUser!);
+                    setState(() {
+                      _emailController.text.isNotEmpty &&
+                              _emailController.text.contains('@')
+                          ? _emailValidate = true
+                          : _emailValidate = false;
+                      if (_emailValidate == false) {
+                        _emailController.text = '';
+                      }
+                      _firstNameController.text.isNotEmpty
+                          ? _nameValidate = true
+                          : _nameValidate = false;
+                      _lastNameController.text.isNotEmpty
+                          ? _nameValidate = true
+                          : _nameValidate = false;
+                      _phoneNumberController.text.length > 5
+                          ? _phoneValidate = true
+                          : _phoneValidate = false;
+                    });
+                    if (_nameValidate &&
+                        _phoneValidate &&
+                        _emailValidate &&
+                        _passwordValidate) {
+                      UserCredential authResult = await FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                              email: _emailController.text,
+                              password: _passwordController.text)
+                          .catchError((e) {
+                        AlertDialog(
+                          title: e.code,
+                        );
+                        print(e);
+                      });
+
+                      if (authResult != null) {
+                        User? firebaseUser = authResult.user;
+                        if (firebaseUser != null) {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(firebaseUser.uid)
+                              .set({
+                            'phoneNumber': _phoneNumberController,
+                            'firstName': _firstNameController,
+                            'last_name': _lastNameController,
+                            'email': _emailController,
+                          });
+                          await firebaseUser.reload();
+                          print('sign up: $firebaseUser');
+                          User? newUser =
+                              await FirebaseAuth.instance.currentUser;
+                          authNotifier.setUser(newUser!);
+                          Navigator.push(
+                            (context),
+                            MaterialPageRoute(
+                              builder: (_) => HomeScreen(),
+                            ),
+                          );
+                        }
                       }
                     }
-                    Navigator.push(
-                      (context),
-                      MaterialPageRoute(
-                        builder: (_) => HomeScreen(),
-                      ),
-                    );
                   },
                 ),
                 RichText(

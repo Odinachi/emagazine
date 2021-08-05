@@ -16,15 +16,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
-    String _emailController = '';
-    String _passwordController = '';
-
-    String? validatePassword(String value) {
-      if (!(value.length > 5) && value.isNotEmpty) {
-        return "Password should contain more than 5 characters";
-      }
-      return null;
-    }
+    bool _emailValidate = true;
+    bool _passwordValidate = true;
+    TextEditingController _emailController = TextEditingController();
+    TextEditingController _passwordController = TextEditingController();
 
     AuthNotifier authNotifier =
         Provider.of<AuthNotifier>(context, listen: false);
@@ -57,53 +52,64 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 CustomInputField(
-                  onChangeCallback: (value) {
-                    setState(() {
-                      _emailController = value;
-                    });
-                  },
+                  control: _emailController,
                   name: 'Email',
+                  error: _emailValidate ? null : 'input a valid email',
                 ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomPassWordField(
-                  onChangeCallback: (value) {
-                    setState(() {
-                      _passwordController = value;
-                    });
-                  },
+                  control: _passwordController,
                   name: 'Password',
-                  error: validatePassword(_passwordController),
+                  error: _passwordValidate ? null : 'Input a valid password',
                 ),
                 SizedBox(
                   height: 20,
                 ),
                 CustomButton(
                   callback: () async {
-                    print(_passwordController);
-                    print(_emailController);
+                    setState(() {
+                      _emailController.text.isNotEmpty &&
+                              _emailController.text.contains('@')
+                          ? _emailValidate = true
+                          : _emailValidate = false;
+                      if (_emailValidate == false) {
+                        _emailController.text = '';
+                        FocusScope.of(context).unfocus();
+                      }
+                    });
+                    if (_passwordValidate && _emailValidate) {
+                      FocusScope.of(context).unfocus();
+                      UserCredential authResult = await FirebaseAuth.instance
+                          .signInWithEmailAndPassword(
+                              email: _emailController.text,
+                              password: _passwordController.text)
+                          .catchError(
+                        (onError) {
+                          AlertDialog(
+                            title: onError.code,
+                          );
+                          print(onError.code);
+                        },
+                      );
 
-                    UserCredential authResult = await FirebaseAuth.instance
-                        .signInWithEmailAndPassword(
-                            email: _emailController,
-                            password: _passwordController)
-                        .catchError((onError) => print(onError.code));
-                    if (authResult != null) {
-                      User? firebaseUser = authResult.user;
-                      if (firebaseUser != null) {
-                        print('logged in: $firebaseUser');
-                        authNotifier.setUser(firebaseUser);
+                      if (authResult != null) {
+                        User? firebaseUser = authResult.user;
+                        if (firebaseUser != null) {
+                          print('logged in: $firebaseUser');
+                          authNotifier.setUser(firebaseUser);
+                          Navigator.push(
+                            (context),
+                            MaterialPageRoute(
+                              builder: (_) => HomeScreen(),
+                            ),
+                          );
+                        }
                       }
                     }
 
                     FocusScope.of(context).unfocus();
-                    // Navigator.push(
-                    //   (context),
-                    //   MaterialPageRoute(
-                    //     builder: (_) => HomeScreen(),
-                    // ),
-                    //);
                   },
                   text: 'Login',
                 ),
@@ -152,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
